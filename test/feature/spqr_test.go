@@ -33,14 +33,16 @@ const (
 	spqrCoordinatorName             = "coordinator"
 	spqrQDBName                     = "qdb"
 	spqrPort                        = 6432
+	adminPort                       = 7432
 	coordinatorPort                 = 7002
 	qdbPort                         = 2379
 	shardUser                       = "regress"
 	shardPassword                   = ""
 	dbName                          = "regress"
+	consoleName                     = "spqr-console"
 	postgresqlConnectTimeout        = 30 * time.Second
 	postgresqlInitialConnectTimeout = 2 * time.Minute
-	postgresqlQueryTimeout          = 2 * time.Second
+	postgresqlQueryTimeout          = 5 * time.Second
 )
 
 type testContext struct {
@@ -193,35 +195,36 @@ func (tctx *testContext) connectPostgresql(addr string, timeout time.Duration) (
 }
 
 func (tctx *testContext) connectPostgresqlWithCredentials(username string, password string, addr string, timeout time.Duration) (*sqlx.DB, error) {
-	connTimeout := 2 * time.Second
-	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s", username, password, addr, dbName)
-	connCfg, _ := pgx.ParseConfig(dsn)
-	connCfg.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
-	connCfg.RuntimeParams["client_encoding"] = "UTF8"
-	connStr := stdlib.RegisterConnConfig(connCfg)
-	db, err := sqlx.Open("pgx", connStr)
-	if err != nil {
-		return nil, err
-	}
-	// sql is lazy in go, so we need ping db
-	testutil.Retry(func() bool {
+	ping := func(db *sqlx.DB) bool {
 		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 		defer cancel()
-		err = db.PingContext(ctx)
+		err := db.PingContext(ctx)
 		return err == nil
-	}, timeout, connTimeout)
-	if err != nil {
-		_ = db.Close()
-		return nil, err
 	}
-	return db, nil
+	return tctx.connectorWithCredentials(username, password, addr, dbName, timeout, ping)
+}
+
+func (tctx *testContext) connectRouterConsoleWithCredentials(username, password, addr string, timeout time.Duration) (*sqlx.DB, error) {
+	ping := func(db *sqlx.DB) bool {
+		return true
+	}
+	return tctx.connectorWithCredentials(username, password, addr, consoleName, timeout, ping)
 }
 
 func (tctx *testContext) connectCoordinatorWithCredentials(username string, password string, addr string, timeout time.Duration) (*sqlx.DB, error) {
+	ping := func(db *sqlx.DB) bool {
+		_, err := db.Exec("SHOW routers")
+		return err == nil
+	}
+	return tctx.connectorWithCredentials(username, password, addr, dbName, timeout, ping)
+}
+
+func (tctx *testContext) connectorWithCredentials(username string, password string, addr string, dbName string, timeout time.Duration, ping func(db *sqlx.DB) bool) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s", username, password, addr, dbName)
 	connCfg, _ := pgx.ParseConfig(dsn)
 	connCfg.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 	connCfg.RuntimeParams["client_encoding"] = "UTF8"
+	connCfg.RuntimeParams["standard_conforming_strings"] = "on"
 	connStr := stdlib.RegisterConnConfig(connCfg)
 	db, err := sqlx.Open("pgx", connStr)
 	if err != nil {
@@ -229,8 +232,7 @@ func (tctx *testContext) connectCoordinatorWithCredentials(username string, pass
 	}
 	// sql is lazy in go, so we need ping db
 	testutil.Retry(func() bool {
-		_, err = db.Exec("SHOW routers")
-		return err == nil
+		return ping(db)
 	}, timeout, 2*time.Second)
 	if err != nil {
 		_ = db.Close()
@@ -245,7 +247,7 @@ func (tctx *testContext) getPostgresqlConnection(host string) (*sqlx.DB, error) 
 		return nil, fmt.Errorf("postgresql %s is not in cluster", host)
 	}
 	err := db.Ping()
-	if err == nil {
+	if err == nil || strings.HasSuffix(host, "admin") || host == "coordinator" {
 		return db, nil
 	}
 	addr, err := tctx.composer.GetAddr(host, spqrPort)
@@ -281,10 +283,13 @@ func (tctx *testContext) queryPostgresql(host string, query string, args interfa
 			continue
 		}
 		result, err = tctx.doPostgresqlQuery(db, q, args, postgresqlQueryTimeout)
+		if err != nil {
+			tctx.sqlUserQueryError.Store(host, err.Error())
+		}
 		tctx.sqlQueryResult = result
 	}
 
-	return result, err
+	return result, nil
 }
 
 func (tctx *testContext) executePostgresql(host string, query string, args interface{}) error {
@@ -348,11 +353,6 @@ func (tctx *testContext) stepClusterIsUpAndRunning(createHaNodes bool) error {
 		return fmt.Errorf("failed to setup compose cluster: %s", err)
 	}
 
-	connCfg := pgx.ConnConfig{
-		DefaultQueryExecMode: pgx.QueryExecModeSimpleProtocol,
-	}
-	stdlib.RegisterConnConfig(&connCfg)
-
 	// check databases
 	for _, service := range tctx.composer.Services() {
 		if strings.HasPrefix(service, spqrShardName) {
@@ -379,6 +379,22 @@ func (tctx *testContext) stepClusterIsUpAndRunning(createHaNodes bool) error {
 			if err != nil {
 				return fmt.Errorf("failed to connect to SPQR router %s: %s", service, err)
 			}
+			tctx.dbs[service] = db
+		}
+	}
+
+	// check router admin console
+	for _, service := range tctx.composer.Services() {
+		if strings.HasPrefix(service, spqrRouterName) {
+			addr, err := tctx.composer.GetAddr(service, spqrPort)
+			if err != nil {
+				return fmt.Errorf("failed to get router addr %s: %s", service, err)
+			}
+			db, err := tctx.connectRouterConsoleWithCredentials(shardUser, shardPassword, addr, postgresqlInitialConnectTimeout)
+			if err != nil {
+				return fmt.Errorf("failed to connect to SPQR router %s: %s", service, err)
+			}
+			service = fmt.Sprintf("%s-admin", service)
 			tctx.dbs[service] = db
 		}
 	}
@@ -486,6 +502,23 @@ func (tctx *testContext) stepRecordQDBTx(key string, body *godog.DocString) erro
 	return tctx.qdb.RecordTransferTx(context.TODO(), key, &st)
 }
 
+func (tctx *testContext) stepErrorShouldMatch(host string, matcher string, body *godog.DocString) error {
+	m, err := matchers.GetMatcher(matcher)
+	if err != nil {
+		return err
+	}
+	sqlErr, ok := tctx.sqlUserQueryError.Load(host)
+	if !ok {
+		return fmt.Errorf("host %s didn't get any error", host)
+	}
+	tctx.sqlUserQueryError.Delete(host)
+	res, err := json.Marshal(sqlErr)
+	if err != nil {
+		panic(err)
+	}
+	return m(string(res), strings.TrimSpace(body.Content))
+}
+
 // nolint: unused
 func InitializeScenario(s *godog.ScenarioContext) {
 	tctx, err := newTestContext()
@@ -534,9 +567,10 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^I run SQL on host "([^"]*)"$`, tctx.stepIRunSQLOnHost)
 	s.Step(`^I execute SQL on host "([^"]*)"$`, tctx.stepIExecuteSql)
 	s.Step(`^SQL result should match (\w+)$`, tctx.stepSQLResultShouldMatch)
+
 	s.Step(`^SQL result should not match (\w+)$`, tctx.stepSQLResultShouldNotMatch)
 	s.Step(`^I record in qdb data transfer transaction with name "([^"]*)"$`, tctx.stepRecordQDBTx)
-
+	s.Step(`^SQL error on host "([^"]*)" should match (\w+)$`, tctx.stepErrorShouldMatch)
 }
 
 func TestMysync(t *testing.T) {
