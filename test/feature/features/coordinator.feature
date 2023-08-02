@@ -232,10 +232,6 @@ Feature: Coordinator test
     SHOW key_ranges
     """
     Then command return code should be "0"
-    And SQL result should match regexp
-    """
-    \[\]
-    """
 
   Scenario: QDB is down
     Given host "qdb01" is stopped

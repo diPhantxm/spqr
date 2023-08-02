@@ -358,6 +358,8 @@ func (tctx *testContext) stepClusterIsUpAndRunning(createHaNodes bool) error {
 		return fmt.Errorf("failed to setup compose cluster: %s", err)
 	}
 
+	tctx.composer.RunCommandAtHosts("rm /go/memqdb.backup", "router", 5*time.Second)
+
 	// check databases
 	for _, service := range tctx.composer.Services() {
 		if strings.HasPrefix(service, spqrShardName) {
