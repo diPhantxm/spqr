@@ -24,6 +24,7 @@ import (
 
 	"github.com/pg-sharding/spqr/coordinator"
 	"github.com/pg-sharding/spqr/pkg/config"
+	"github.com/pg-sharding/spqr/pkg/conn"
 	"github.com/pg-sharding/spqr/pkg/connectiterator"
 	"github.com/pg-sharding/spqr/pkg/models/datashards"
 	"github.com/pg-sharding/spqr/pkg/models/kr"
@@ -1005,6 +1006,8 @@ func (qc *qdbCoordinator) ProcClient(ctx context.Context, nconn net.Conn) error 
 			} else {
 				spqrlog.Zero.Debug().Msg("processed OK")
 			}
+		case conn.CANCELREQ:
+			return nil
 		default:
 			return cli.ReportError(fmt.Errorf("unsupported msg type %T", msg))
 		}

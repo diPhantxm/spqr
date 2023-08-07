@@ -47,14 +47,36 @@ services:
             ETCD_LOG_LEVEL: "debug"
         ports:
             - "2379:2379"
-    router:
+    router1:
         build:
             dockerfile: ./docker/router/Dockerfile
             context: .
+            args:
+                - SPQR_CONFIG=/spqr/docker/router/cfg1.yaml
         ports:
             - "8432:6432"
         hostname: spqr_router_1_1
         container_name: spqr_router_1_1
+    router2:
+        build:
+            dockerfile: ./docker/router/Dockerfile
+            context: .
+            args:
+                - SPQR_CONFIG=/spqr/docker/router/cfg2.yaml
+        ports:
+            - "9432:6432"
+        hostname: spqr_router_1_2
+        container_name: spqr_router_1_2
+    router3:
+        build:
+            dockerfile: ./docker/router/Dockerfile
+            context: .
+            args:
+                - SPQR_CONFIG=/spqr/docker/router/cfg3.yaml
+        ports:
+            - "10432:6432"
+        hostname: spqr_router_1_3
+        container_name: spqr_router_1_3
     balancer:
         build:
             dockerfile: ./docker/balancer/Dockerfile

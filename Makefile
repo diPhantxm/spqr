@@ -49,9 +49,12 @@ clean:
 ######################## RUN ########################
 
 run: build_images
-	docker-compose up -d --remove-orphans --build router coordinator shard1 shard2 qdb01
+	docker-compose up -d --remove-orphans --build router1 router2 router3 coordinator shard1 shard2 qdb01
 	docker-compose build client
 	docker-compose run --entrypoint /bin/bash client
+
+break: run
+	docker exec client ./init.sh
 
 proxy_2sh_run:
 	./spqr-router run -c ./examples/2shardproxy.yaml -d --proto-debug
