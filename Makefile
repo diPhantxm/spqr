@@ -38,7 +38,7 @@ build_mover:
 build_worldmock:
 	go build -pgo=auto -o spqr-worldmock ./cmd/worldmock
 
-build: build_balancer build_coordinator build_coorctl build_router build_mover build_worldmock
+build: build_balancer build_coordinator build_coorctl build_router build_mover
 
 build_images:
 	docker-compose build spqr-base-image spqr-shard-image
@@ -49,12 +49,9 @@ clean:
 ######################## RUN ########################
 
 run: build_images
-	docker-compose up -d --remove-orphans --build router1 router2 router3 coordinator shard1 shard2 qdb01
-	docker-compose build client
+	docker-compose up -d --remove-orphans --build  router1 router2 router3 coordinator shard1 shard2 qdb01
+	docker-compose build --no-cache client
 	docker-compose run --entrypoint /bin/bash client
-
-break: run
-	docker exec client ./init.sh
 
 proxy_2sh_run:
 	./spqr-router run -c ./examples/2shardproxy.yaml -d --proto-debug

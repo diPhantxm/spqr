@@ -53,6 +53,8 @@ services:
             context: .
             args:
                 - SPQR_CONFIG=/spqr/docker/router/cfg1.yaml
+        environment:
+            - SPQR_CONFIG=/spqr/docker/router/cfg1.yaml
         ports:
             - "8432:6432"
         hostname: spqr_router_1_1
@@ -63,6 +65,8 @@ services:
             context: .
             args:
                 - SPQR_CONFIG=/spqr/docker/router/cfg2.yaml
+        environment:
+            - SPQR_CONFIG=/spqr/docker/router/cfg2.yaml
         ports:
             - "9432:6432"
         hostname: spqr_router_1_2
@@ -73,6 +77,8 @@ services:
             context: .
             args:
                 - SPQR_CONFIG=/spqr/docker/router/cfg3.yaml
+        environment:
+            - SPQR_CONFIG=/spqr/docker/router/cfg3.yaml
         ports:
             - "10432:6432"
         hostname: spqr_router_1_3
