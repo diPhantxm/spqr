@@ -570,13 +570,11 @@ func (qc *qdbCoordinator) Split(ctx context.Context, req *kr.SplitKeyRange) erro
 	if krOld, err = qc.db.LockKeyRange(ctx, req.SourceID); err != nil {
 		return err
 	}
-	fmt.Println("lock key range")
 
 	defer func() {
 		if err := qc.db.UnlockKeyRange(ctx, req.SourceID); err != nil {
 			spqrlog.Zero.Error().Err(err).Msg("")
 		}
-		fmt.Println("unlock key range")
 	}()
 
 	if kr.CmpRangesLess(req.Bound, krOld.LowerBound) || !kr.CmpRangesLess(req.Bound, krOld.UpperBound) {

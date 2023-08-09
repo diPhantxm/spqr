@@ -420,6 +420,7 @@ func (q *MemQDB) CheckLockedKeyRange(ctx context.Context, id string) (*KeyRange,
 
 func (q *MemQDB) ShareKeyRange(id string) error {
 	spqrlog.Zero.Debug().Str("key-range", id).Msg("memqdb: sharing key with key")
+	fmt.Println(q.Freq)
 
 	q.mu.RLock()
 	defer q.mu.RUnlock()

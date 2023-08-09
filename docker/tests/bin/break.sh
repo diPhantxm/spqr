@@ -18,16 +18,16 @@ psql -h spqr_shard_1 -p 6432 -U user1 -d db1 -c "INSERT INTO test (id) VALUES (g
 psql -h spqr_shard_2 -p 6432 -U user1 -d db1 -c "INSERT INTO test (id) VALUES (generate_series(1000001, 2000000));"
 psql -h spqr_shard_2 -p 6432 -U user1 -d db1 -c "INSERT INTO test (id) VALUES (generate_series(2000001, 3000000));"
 
-while true
-do
-    id=$(shuf -i 1-3000000 -n 1)
-    router=$(($RANDOM % 3 + 1))
-    query="SELECT id, name, age, balance FROM test WHERE id=$id;"
-    host="spqr_router_1_$router"
-    psql -h $host -p 6432 -U user1 -d db1 -c "$query"
-
-    sleep 0.01s
-done
+#while true
+#do
+#    id=$(shuf -i 1-3000000 -n 1)
+#    router=$(($RANDOM % 3 + 1))
+#    query="SELECT id, name, age, balance FROM test WHERE id=$id;"
+#    host="spqr_router_1_$router"
+#    psql -h $host -p 6432 -U user1 -d db1 -c "$query"
+#
+#    sleep 0.01s
+#done
 
 #sysbench --threads=24 --table_size=3000000 --auto_inc=false --pgsql-host=spqr_router_1_1 --pgsql-port=6432 --pgsql-user=user1 --pgsql-db=db1 --auto_inc=false --tables=2 --db-driver=pgsql --db-ps-mode=disable /usr/local/bin/oltp_read_write.lua prepare
 #sysbench --threads=24 --table_size=3000000 --auto_inc=false --pgsql-host=spqr_router_1_1 --pgsql-port=6432 --pgsql-user=user1 --pgsql-db=db1 --auto_inc=false --tables=2 --db-driver=pgsql --db-ps-mode=disable /usr/local/bin/oltp_read_write.lua run

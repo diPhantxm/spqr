@@ -80,6 +80,13 @@ Steps:
   - prepare and commit distributed move transation
 */
 func MoveKeys(ctx context.Context, fromId, toId string, keyr qdb.KeyRange, shr []*shrule.ShardingRule, db qdb.XQDB) error {
+	spqrlog.Zero.Debug().
+		Str("from", fromId).
+		Str("to", toId).
+		Interface("key range", keyr).
+		Interface("sharding rule", shr).
+		Msg("move keys")
+
 	if shards == nil {
 		err := LoadConfig(config.CoordinatorConfig().ShardDataCfg)
 		if err != nil {
@@ -98,6 +105,7 @@ func MoveKeys(ctx context.Context, fromId, toId string, keyr qdb.KeyRange, shr [
 		return err
 	}
 
+	spqrlog.Zero.Debug().Msg("begin transactions")
 	txFrom, txTo, err := beginTransactions(ctx, from, to)
 	if err != nil {
 		return err
@@ -233,6 +241,7 @@ func rollbackTransactions(ctx context.Context, txTo, txFrom pgx.Tx) error {
 
 // TODO enhance for multi-column sharding rules
 func moveData(ctx context.Context, keyRange kr.KeyRange, key *shrule.ShardingRule, txTo, txFrom pgx.Tx) error {
+	spqrlog.Zero.Debug().Interface("sharding rule", key).Msg("move data")
 	rows, err := txFrom.Query(ctx, `
 SELECT table_schema, table_name
 FROM information_schema.columns
@@ -241,6 +250,7 @@ WHERE column_name=$1;
 	if err != nil {
 		return err
 	}
+	spqrlog.Zero.Debug().Interface("sharding rule", key).Msg("after query")
 	var ress []MoveTableRes
 	for rows.Next() {
 		var curres MoveTableRes
