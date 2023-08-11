@@ -266,7 +266,7 @@ func (q *EtcdQDB) UpdateKeyRange(ctx context.Context, keyRange *KeyRange) error 
 		Bytes("upper-bound", keyRange.UpperBound).
 		Str("shard-id", keyRange.ShardID).
 		Str("key-range-id", keyRange.KeyRangeID).
-		Msg("etcdqdb: update key range")
+		Msg("etcdqdb: add key range")
 
 	rawKeyRange, err := json.Marshal(keyRange)
 	if err != nil {
