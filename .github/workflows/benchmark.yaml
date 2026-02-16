@@ -1,0 +1,32 @@
+name: Run benchmarks
+
+on:
+  push:
+    branches: [ master ]
+  release:
+    types: [created]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Yandex Cloud CR "Login" Action for GitHub Actions
+        uses: yc-actions/yc-cr-login@v2
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          cr-endpoint: cr.cloud-preprod.yandex.net
+
+      - name: Build, tag, and push image to Yandex Cloud Container Registry
+        env:
+          CR_REGISTRY: ${{ secrets.YC_REGISTRY_ID }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t spqr-base-image -f docker/spqr/Dockerfile .
+          docker build -t cr.cloud-preprod.yandex.net/$CR_REGISTRY/spqr:$IMAGE_TAG -f docker/router/Dockerfile .
+          docker push cr.cloud-preprod.yandex.net/$CR_REGISTRY/spqr:$IMAGE_TAG
