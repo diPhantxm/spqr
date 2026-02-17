@@ -20,7 +20,7 @@ jobs:
         uses: yc-actions/yc-cr-login@v2
         with:
           yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
-          cr-endpoint: cr.cloud-preprod.yandex.net
+          cr-endpoint: cr.yandex
 
       - name: Build, tag, and push image to Yandex Cloud Container Registry
         env:
@@ -28,5 +28,5 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t spqr-base-image -f docker/spqr/Dockerfile .
-          docker build -t cr.cloud-preprod.yandex.net/$CR_REGISTRY/spqr:$IMAGE_TAG -f docker/router/Dockerfile .
-          docker push cr.cloud-preprod.yandex.net/$CR_REGISTRY/spqr:$IMAGE_TAG
+          docker build -t cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG -f docker/router/Dockerfile .
+          docker push cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG
