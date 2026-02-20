@@ -50,3 +50,15 @@ jobs:
         run: |
           terraform -chdir=.github/actions/benchmarks init
           terraform -chdir=.github/actions/benchmarks apply -auto-approve
+
+      - name: Send link
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            [Benchmark report](https://storage.yandexcloud.net/spqr-benchmark-reports/index.html?pr=${{ github.event.pull_request.number }})
+
+      - name: Terraform Destroy
+        if: ${{ always() }}
+        run: terraform -chdir=.github/actions/benchmarks destroy -auto-approve

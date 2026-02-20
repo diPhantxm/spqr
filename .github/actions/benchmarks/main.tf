@@ -26,8 +26,8 @@ data "yandex_compute_image" "container_optimized_image" {
 resource "yandex_compute_instance" "routers" {
   count = var.router_count
 
-  hostname = "spqr-benchmarks-router${count.index}"
-  name     = "spqr-benchmarks-router${count.index}"
+  hostname = "spqr-benchmarks-router-${var.pr_number}-${count.index}"
+  name     = "spqr-benchmarks-router-${var.pr_number}-${count.index}"
   zone = "ru-central1-d"
   
   boot_disk {
@@ -59,8 +59,8 @@ resource "yandex_compute_instance" "routers" {
 }
 
 resource "yandex_compute_instance" "benchmark-loader" {
-  hostname = "spqr-benchmarks-loader"
-  name     = "spqr-benchmarks-loader"
+  hostname = "spqr-benchmarks-loader-${var.pr_number}"
+  name     = "spqr-benchmarks-loader-${var.pr_number}"
   zone = "ru-central1-d"
   
   boot_disk {
