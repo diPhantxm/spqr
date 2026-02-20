@@ -61,4 +61,9 @@ jobs:
 
       - name: Terraform Destroy
         if: ${{ always() }}
+        env:
+          TF_VAR_cr_registry: ${{ secrets.YC_REGISTRY_ID }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_image_id: cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG
+          TF_VAR_pr_number: ${{ github.event.pull_request.number }}
         run: terraform -chdir=.github/actions/benchmarks destroy -auto-approve
