@@ -6,6 +6,11 @@ terraform {
   }
 }
 
+provider "yandex" {
+    cloud_id  = "b1g8717fm8f009puc67r"
+    folder_id = "b1gugeumtm75bnd8jqhi"
+}
+
 resource "yandex_vpc_network" "spqr-net" {}
 
 resource "yandex_vpc_subnet" "spqr-subnet-d" {
