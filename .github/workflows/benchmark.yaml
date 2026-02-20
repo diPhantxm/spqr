@@ -13,13 +13,6 @@ jobs:
       github.event.label.name == 'performance'
 
     runs-on: ubuntu-latest
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    environment: production
->>>>>>> bfdb060d (impl)
-=======
->>>>>>> 49640f40 (handle status)
 
     steps:
       - uses: actions/checkout@v2
