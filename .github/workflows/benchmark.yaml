@@ -1,15 +1,17 @@
 name: Run benchmarks
 
 on:
-  push:
-    branches: [ master ]
-  release:
-    types: [created]
+  pull_request:
+    types: [labeled]
 
   workflow_dispatch:
 
 jobs:
   build:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'performance'
+
     runs-on: ubuntu-latest
     environment: production
 
@@ -30,3 +32,16 @@ jobs:
           docker build -t spqr-base-image -f docker/spqr/Dockerfile .
           docker build -t cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG -f docker/router/Dockerfile .
           docker push cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG
+
+      - name: Prepare Infra
+        env:
+          CR_REGISTRY: ${{ secrets.YC_REGISTRY_ID }}
+          IMAGE_TAG: ${{ github.sha }}
+          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          TF_VAR_cr_registry: ${{ secrets.YC_REGISTRY_ID }}
+          TF_VAR_image_tag: ${{ github.sha }}
+          TF_VAR_image_id: cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG
+          TF_VAR_pr_number: ${{ github.event.pull_request.number }}
+        run: |
+          terraform -chdir=.github/actions/benchmarks init
+          terraform -chdir=.github/actions/benchmarks apply -auto-approve
