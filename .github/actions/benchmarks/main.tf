@@ -153,6 +153,10 @@ write_files:
       apt update && sudo apt upgrade -y
       apt install default-jdk -y
       apt install openjdk-21-jdk -y
+      
+      echo "installing yc-cli"
+      curl -sSL -o install.sh https://storage.yandexcloud.net/yandexcloud-yc/install.sh
+      HOME=/root bash install.sh
 
       echo "preparing benchmark tests"
       cd benchbase-spqr
