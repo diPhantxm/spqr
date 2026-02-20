@@ -33,11 +33,6 @@ jobs:
           docker build -t cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG -f docker/router/Dockerfile .
           docker push cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
-
       - name: Prepare Infra
         env:
           CR_REGISTRY: ${{ secrets.YC_REGISTRY_ID }}
