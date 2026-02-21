@@ -4,6 +4,16 @@ terraform {
       source = "registry.terraform.io/yandex-cloud/yandex"
     }
   }
+
+  backend "s3" {
+    bucket   = "spqr-benchmark-resources"
+    region   = "us-east-1"
+    endpoint = "https://storage.yandexcloud.net"
+
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    force_path_style = true
+  }
 }
 
 provider "yandex" {
