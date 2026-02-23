@@ -52,8 +52,8 @@ resource "yandex_compute_instance" "routers" {
 
   platform_id = "standard-v3"
   resources {
-    cores = 4
-    memory = 8
+    cores = 32
+    memory = 32
     core_fraction = 100
   }
 
@@ -90,8 +90,8 @@ resource "yandex_compute_instance" "benchmark-loader" {
 
   platform_id = "standard-v3"
   resources {
-    cores = 4
-    memory = 8
+    cores = 32
+    memory = 32
     core_fraction = 100
   }
 

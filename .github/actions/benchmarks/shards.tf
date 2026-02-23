@@ -8,11 +8,14 @@ resource "yandex_mdb_postgresql_cluster_v2" "shards" {
   config {
     version = 16
     resources {
-      resource_preset_id = "s3-c4-m16"
+      resource_preset_id = "s3-c8-m32"
       disk_type_id       = "network-ssd"
-      disk_size          = 100
+      disk_size          = 300
     }
 
+    postgresql_config = {
+      max_connections = 300
+    }
     pooler_config = {
       pooling_mode = "TRANSACTION"
       pool_discard = false
