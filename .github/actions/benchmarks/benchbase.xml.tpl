@@ -9,7 +9,7 @@
     <preferQueryMode>simple</preferQueryMode>
     <reconnectOnConnectionFailure>true</reconnectOnConnectionFailure>
     <isolation>TRANSACTION_SERIALIZABLE</isolation>
-    <batchsize>128</batchsize>
+    <batchsize>1024</batchsize>
 
     <scalefactor>1</scalefactor>
 
@@ -22,15 +22,15 @@
     <!-- Upper limits are the highest warehouse id (up to and including) that is stored at corresponding shard-->
     <upperLimits>
 %{ for i, ip in shard_ips ~}
-        <upperLimit>${(i+1)*2}</upperLimit>
+        <upperLimit>${(i+1)*250}</upperLimit>
 %{ endfor }
     </upperLimits>
     <!-- The workload -->
-    <terminals>2</terminals>
+    <terminals>128</terminals>
     <works>
         <work>
-            <warmup>30</warmup>
-            <time>300</time>
+            <warmup>300</warmup>
+            <time>3000</time>
             <rate>unlimited</rate>
             <weights>45,43,4,4,4</weights>
         </work>
