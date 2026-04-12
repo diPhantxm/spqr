@@ -13,6 +13,7 @@ import (
 	"github.com/pg-sharding/spqr/pkg/config"
 	"github.com/pg-sharding/spqr/pkg/models/distributions"
 	"github.com/pg-sharding/spqr/pkg/models/spqrerror"
+	"github.com/pg-sharding/spqr/pkg/models/topology"
 	"github.com/pg-sharding/spqr/pkg/prepstatement"
 	"github.com/pg-sharding/spqr/pkg/session"
 	"github.com/pg-sharding/spqr/pkg/spqrlog"
@@ -170,7 +171,7 @@ func (rst *RelayStateImpl) queryProc(comment string, binderQ func() error) error
 					rst.Client().SetScatterQuery(val != "")
 				case session.SPQR_EXECUTE_ON:
 
-					if _, ok := config.RouterConfig().ShardMapping[val]; !ok {
+					if _, ok := topology.ShardMapping[val]; !ok {
 						return fmt.Errorf("no such shard: %v", val)
 					}
 					rst.Client().SetExecuteOn(session.VirtualParamLevelStatement, val)

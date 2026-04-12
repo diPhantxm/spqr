@@ -15,6 +15,7 @@ import (
 	"github.com/pg-sharding/spqr/pkg/models/distributions"
 	"github.com/pg-sharding/spqr/pkg/models/kr"
 	"github.com/pg-sharding/spqr/pkg/models/sequences"
+	"github.com/pg-sharding/spqr/pkg/models/topology"
 	"github.com/pg-sharding/spqr/pkg/plan"
 	"github.com/pg-sharding/spqr/pkg/session"
 	"github.com/pg-sharding/spqr/pkg/tupleslot"
@@ -91,10 +92,11 @@ func TestMultiShardRouting(t *testing.T) {
 	err = db.ExecNoTransaction(context.TODO(), chunk)
 	assert.NoError(err)
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
+
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
 	pr, err := qrouter.NewProxyRouter(shardMapping, lc, nil, &config.QRouter{}, nil, getIdentityMngr(lc))
@@ -226,9 +228,9 @@ func TestCreateTable(t *testing.T) {
 	err = db.ExecNoTransaction(context.TODO(), chunk)
 	assert.NoError(err)
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -370,9 +372,9 @@ func TestScatterQueryRoutingEngineV2(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -573,9 +575,9 @@ func TestRoutingByExpression(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -705,9 +707,9 @@ func TestReferenceRelationSequenceRouting(t *testing.T) {
 		},
 	})
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -795,9 +797,9 @@ func TestReferenceRelationRouting(t *testing.T) {
 		ShardIds:  []string{"sh1", "sh2"},
 	})
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -1014,9 +1016,9 @@ func TestComment(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -1132,10 +1134,10 @@ func TestCTE(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
-		"sh3": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
+		"sh3": {ID: "sh3"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -1492,9 +1494,9 @@ func TestSingleShard(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -1809,9 +1811,9 @@ func TestInsertOffsets(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -1971,9 +1973,9 @@ func TestJoins(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -2126,9 +2128,9 @@ func TestUnnest(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -2237,9 +2239,9 @@ func TestCopySingleShard(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -2332,9 +2334,9 @@ func TestCopyMultiShard(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -2418,9 +2420,9 @@ func TestSetStmt(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -2539,9 +2541,9 @@ func TestRouteWithRules_Select(t *testing.T) {
 	assert.NoError(err)
 	assert.NoError(db.ExecNoTransaction(ctx, statements))
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -2870,9 +2872,9 @@ func TestHashRouting(t *testing.T) {
 
 	assert.NoError(err)
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 
@@ -2965,9 +2967,9 @@ func prepareTestCheckTableIsRoutable(t *testing.T) (*qrouter.ProxyQrouter, error
 		return nil, err
 	}
 
-	shardMapping := map[string]*config.Shard{
-		"sh1": {},
-		"sh2": {},
+	shardMapping := map[string]*topology.DataShard{
+		"sh1": {ID: "sh1"},
+		"sh2": {ID: "sh2"},
 	}
 	lc := coord.NewLocalInstanceMetadataMgr(db, nil, nil, shardMapping, false, nil)
 

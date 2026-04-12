@@ -585,12 +585,7 @@ func ProcessCreate(ctx context.Context, astmt spqrparser.Statement, mngr EntityM
 		}
 		return tts, nil
 	case *spqrparser.ShardDefinition:
-		shardCfg := &config.Shard{
-			RawHosts: stmt.Hosts,
-			Type:     config.DataShard,
-			Options:  optionsToMap(stmt.Options),
-		}
-		dataShard := topology.NewDataShard(stmt.Id, shardCfg)
+		dataShard := topology.NewDataShard(stmt.Id, config.DataShard, topology.OptionsFromSQL(stmt.Options))
 		if err := mngr.AddDataShard(ctx, dataShard); err != nil {
 			return nil, err
 		}
@@ -2179,25 +2174,6 @@ func processAlterShard(ctx context.Context,
 	astmt spqrparser.Statement,
 	mngr EntityMgr, shardId string) (*tupleslot.TupleTableSlot, error) {
 	switch stmt := astmt.(type) {
-	case *spqrparser.AlterShardHosts:
-		if err := mngr.AlterShardHosts(ctx, shardId, stmt.Hosts); err != nil {
-			return nil, err
-		}
-
-		tts := &tupleslot.TupleTableSlot{
-			Desc: engine.GetVPHeader("alter shard hosts"),
-			Raw: [][][]byte{
-				{
-					fmt.Appendf(nil, "shard id -> %s", shardId),
-				},
-
-				{
-					fmt.Appendf(nil, "hosts    -> %s", strings.Join(stmt.Hosts, ",")),
-				},
-			},
-		}
-
-		return tts, nil
 	case *spqrparser.AlterShardOptions:
 		optionsMap := topology.OptionsFromSQL(stmt.Options)
 		if err := mngr.AlterShardOptions(ctx, shardId, optionsMap); err != nil {
@@ -2205,7 +2181,7 @@ func processAlterShard(ctx context.Context,
 		}
 
 		tts := &tupleslot.TupleTableSlot{
-			Desc: engine.GetVPHeader("alter shard options"),
+			Desc: engine.GetVPHeader("alter shard"),
 			Raw: [][][]byte{
 				{
 					fmt.Appendf(nil, "shard id -> %s", shardId),
@@ -2231,10 +2207,10 @@ func optionsToMap(opts []spqrparser.GenericOption) map[string]string {
 	return m
 }
 
-func optionsToTuple(opts map[string]topology.GenericOption) []byte {
+func optionsToTuple(opts []topology.GenericOption) []byte {
 	t := []string{}
-	for k, v := range opts {
-		t = append(t, fmt.Sprintf("%s=%v", k, v))
+	for _, v := range opts {
+		t = append(t, fmt.Sprintf("%s=%v", v.Name, v.Arg))
 	}
 	return []byte(fmt.Sprintf("{%s}", strings.Join(t, ",")))
 }
