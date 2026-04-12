@@ -2688,7 +2688,7 @@ func (qc *ClusteredCoordinator) AlterShardOptions(ctx context.Context, shardId s
 		return err
 	}
 
-	shard, err := qc.Coordinator.GetShard(ctx, shardId)
+	shard, err := qc.GetShard(ctx, shardId)
 	if err != nil {
 		return err
 	}
