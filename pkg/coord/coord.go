@@ -87,9 +87,44 @@ func (lc *Coordinator) AddDataShard(ctx context.Context, shard *topology.DataSha
 	return lc.qdb.AddShard(ctx, topology.DataShardToDB(shard))
 }
 
-// UpdateShard implements meta.EntityMgr.
-func (lc *Coordinator) UpdateShard(ctx context.Context, shard *topology.DataShard) error {
-	return lc.qdb.UpdateShard(ctx, topology.DataShardToDB(shard))
+func (lc *Coordinator) AlterShardOptions(ctx context.Context, shardID string, options []topology.GenericOption) error {
+	shard, err := lc.GetShard(ctx, shardID)
+	if err != nil {
+		return err
+	}
+
+	newOptions := shard.Options()
+	for _, opt := range options {
+		optionInd := slices.IndexFunc(shard.Options(), func(el topology.GenericOption) bool { return el.Name == opt.Name })
+
+		switch opt.Action {
+		case topology.GenericOptionActionUnspecified:
+			fallthrough
+		case topology.GenericOptionActionAdd:
+			if optionInd != -1 {
+				return fmt.Errorf("option \"%s\" was specified more than once", opt.Name)
+			}
+			newOptions = append(newOptions, topology.GenericOption{Name: opt.Name, Arg: opt.Arg})
+		case topology.GenericOptionActionSet:
+			if optionInd == -1 {
+				return fmt.Errorf("option \"%s\" not found", opt.Name)
+			}
+			newOptions[optionInd].Arg = opt.Arg
+		case topology.GenericOptionActionDrop:
+			if optionInd == -1 {
+				return fmt.Errorf("option \"%s\" not found", opt.Name)
+			}
+			newOptions = slices.Delete(newOptions, optionInd, optionInd)
+		}
+	}
+
+	shard.SetOptions(newOptions)
+
+	return lc.qdb.AlterShardOptions(ctx, shardID, topology.GenericOptionsToDB(newOptions))
+}
+
+func (lc *Coordinator) SetShardOptions(ctx context.Context, shardID string, options []topology.GenericOption) error {
+	return lc.qdb.AlterShardOptions(ctx, shardID, topology.GenericOptionsToDB(options))
 }
 
 // AddWorldShard implements meta.EntityMgr.
