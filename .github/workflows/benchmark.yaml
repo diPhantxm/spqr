@@ -3,19 +3,42 @@ name: Run benchmarks
 on:
   pull_request:
     types: [labeled]
+  repository_dispatch:
+    types: [benchmark-command]
 
   workflow_dispatch:
+    inputs:
+      cpu:
+        description: 'Number of CPU cores on router'     
+        required: false
+        default: 32
+      memory:
+        description: 'RAM in GB'
+        required: false
+        default: 32
+      shards_count:
+        description: 'Amount of shards'
+        required: false
+        default: 4
+      shard_resource_preset:
+        description: "Shard's Resource Preset"
+        required: false
+        default: 's3-c8-m32'
 
 jobs:
   build:
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.label.name == 'performance'
+      github.event.label.name == 'performance' ||
+      github.event.name == 'repository_dispatch'
 
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.client_payload.pull_request.head.ref }}
+          repository: ${{ github.event.client_payload.pull_request.head.repo.full_name }}
 
       - name: Yandex Cloud CR "Login" Action for GitHub Actions
         uses: yc-actions/yc-cr-login@v3
@@ -45,7 +68,11 @@ jobs:
           TF_VAR_cr_registry: ${{ secrets.YC_REGISTRY_ID }}
           TF_VAR_image_tag: ${{ github.sha }}
           TF_VAR_image_id: cr.yandex/$CR_REGISTRY/spqr:$IMAGE_TAG
-          TF_VAR_pr_number: ${{ github.event.pull_request.number }}
+          TF_VAR_pr_number: ${{ github.event.pull_request.head.ref || github.event.client_payload.pull_request.head.ref }}
+          TF_VAR_router_cpu: ${{ inputs.cpu }}
+          TF_VAR_router_mem: ${{ inputs.memory }}
+          TF_VAR_shards_count: ${{ inputs.shards_count }}
+          TF_VAR_shard_resource_preset: ${{ inputs.shard_resource_preset }}
           AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
         run: |

@@ -52,8 +52,8 @@ resource "yandex_compute_instance" "routers" {
 
   platform_id = "standard-v3"
   resources {
-    cores = 32
-    memory = 32
+    cores = var.router_cpu
+    memory = var.router_mem
     core_fraction = 100
   }
 
