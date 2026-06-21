@@ -1,7 +1,6 @@
 name: Run benchmarks
 
 on:
-  # Trigger on changes to performance-critical paths (automatic)
   pull_request:
     types: [opened, synchronize, reopened, labeled]
 
@@ -25,7 +24,7 @@ on:
         default: 's3-c8-m32'
 
 jobs:
-  changes:
+  collect_changes:
     runs-on: ubuntu-latest
     outputs:
       benchmark: ${{ steps.filter.outputs.benchmark }}
@@ -48,15 +47,15 @@ jobs:
               - '.github/workflows/benchmark.yaml'
 
   build:
-    needs: changes
+    needs: collect_changes
     # Run if:
     # 1. Manual dispatch
     # 2. Paths matched (opened/synchronize/reopened with changes in monitored dirs)
     # 3. Performance label was added
-    if: >
+    if:  |
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.label.name == 'performance') ||
-      needs.changes.outputs.benchmark == 'true'
+      needs.collect_changes.outputs.benchmark == 'true'
 
     runs-on: ubuntu-latest
     env:
