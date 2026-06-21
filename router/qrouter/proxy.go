@@ -2,6 +2,7 @@ package qrouter
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	"sync/atomic"
@@ -113,6 +114,7 @@ func (qr *ProxyQrouter) SchemaCache() *cache.SchemaCache {
 
 // TODO : unit tests
 func (qr *ProxyQrouter) DataShardsRoutes() []kr.ShardKey {
+	fmt.Println("Here")
 
 	rv := make([]kr.ShardKey, 0)
 
