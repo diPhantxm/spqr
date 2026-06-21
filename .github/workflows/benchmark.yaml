@@ -48,6 +48,7 @@ jobs:
               - '.github/workflows/benchmark.yaml'
 
   build:
+    needs: changes
     # Run if:
     # 1. Manual dispatch
     # 2. Paths matched (opened/synchronize/reopened with changes in monitored dirs)
