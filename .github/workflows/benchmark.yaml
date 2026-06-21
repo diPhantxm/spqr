@@ -4,15 +4,6 @@ on:
   # Trigger on changes to performance-critical paths (automatic)
   pull_request:
     types: [opened, synchronize, reopened, labeled]
-    paths:
-      - 'router/qrouter/**'
-      - 'router/relay/**'
-      - 'router/poolmgr/**'
-      - 'router/client/**'
-      - 'router/server/**'
-      - 'pkg/pool/**'
-      - '.github/actions/benchmarks/**'
-      - '.github/workflows/benchmark.yaml'
 
   workflow_dispatch:
     inputs:
@@ -34,6 +25,28 @@ on:
         default: 's3-c8-m32'
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      benchmark: ${{ steps.filter.outputs.benchmark }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            benchmark:
+              - 'router/qrouter/**'
+              - 'router/relay/**'
+              - 'router/poolmgr/**'
+              - 'router/client/**'
+              - 'router/server/**'
+              - 'pkg/pool/**'
+              - '.github/actions/benchmarks/**'
+              - '.github/workflows/benchmark.yaml'
+
   build:
     # Run if:
     # 1. Manual dispatch
@@ -42,7 +55,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.label.name == 'performance') ||
-      (github.event_name == 'pull_request' && contains(fromJSON('["opened", "synchronize", "reopened"]'), github.event.action))
+      needs.changes.outputs.benchmark == 'true'
 
     runs-on: ubuntu-latest
     env:
