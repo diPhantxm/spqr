@@ -2,7 +2,7 @@ name: Run benchmarks
 
 on:
   pull_request:
-    types: [labeled]
+    types: [labeled, closed]
 
   workflow_dispatch:
     inputs:
@@ -27,7 +27,7 @@ jobs:
   build:
     if: >
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && github.event.label.name == 'performance')
+      (github.event_name == 'pull_request' && github.event.action != 'closed' && github.event.label.name == 'performance')
 
     runs-on: ubuntu-latest
     env:
@@ -92,3 +92,29 @@ jobs:
         run: |
           echo "::notice ::Benchmark report is available at:"
           echo "::notice ::[Benchmark report](https://storage.yandexcloud.net/spqr-benchmark-reports/index.html?pr=$ID)"
+
+  destroy:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true
+
+    runs-on: ubuntu-latest
+    env:
+      ID: ${{ github.head_ref || github.ref_name }}-${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.1.9
+
+      - name: Destroy Infra
+        env:
+          YC_SERVICE_ACCOUNT_KEY_FILE: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+          TF_VAR_pr_number: ${{ env.ID }}
+        run: |
+          terraform -chdir=.github/actions/benchmarks init -backend-config="key=${TF_VAR_pr_number}/terraform.tfstate"
+          terraform -chdir=.github/actions/benchmarks destroy -auto-approve
