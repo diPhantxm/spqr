@@ -120,6 +120,8 @@ type KeyRangeDefinition struct {
 type ShardDefinition struct {
 	Id      string
 	Options []GenericOption
+
+	Force bool
 }
 
 type GenericOption struct {
@@ -486,6 +488,7 @@ const (
 	FileSettingsStr       = "file_settings"
 	TaskGroupWorkersStr   = "task_group_workers"
 	ShardsExtendedStr     = "shards_extended"
+	MeanKRLockTimeStr     = "mean_key_range_lock_time"
 )
 
 // not SHOW target

@@ -25,6 +25,7 @@ aspernatur
 astmt
 authed
 Autoattach
+autoprotect
 basebackup
 bcad
 bcc
@@ -195,6 +196,7 @@ goooal
 gorm
 goyacc
 Greenplum
+Grac
 gss
 gssapi
 GSSREQ
@@ -230,6 +232,7 @@ innerres
 inputdir
 installable
 interactor
+INTERVALOID
 IPrepare
 ipsam
 IRun

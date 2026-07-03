@@ -760,7 +760,7 @@ func (s *QueryStateExecutorImpl) copyToExecutor(serv server.Server, simple bool)
 	}
 
 	if txt != s.cl.Server().TxStatus() {
-		return rerrors.ErrExecutorSyncLost
+		return rerrors.ErrExecutorSyncLost.Detail(fmt.Sprintf("failed to set target transaction status: %v", txt.String()))
 	}
 	s.SetTxStatus(txt)
 
@@ -813,7 +813,7 @@ func (s *QueryStateExecutorImpl) copyFromExecutor(simple bool) error {
 			}
 
 			if txt != s.cl.Server().TxStatus() {
-				return rerrors.ErrExecutorSyncLost
+				return rerrors.ErrExecutorSyncLost.Detail(fmt.Sprintf("failed to set target transaction status: %v", txt.String()))
 			}
 			s.SetTxStatus(txt)
 
@@ -1024,7 +1024,7 @@ func (s *QueryStateExecutorImpl) executeSliceGuts(qd *QueryDesc, topPlan plan.Pl
 		spqrlog.Zero.Debug().
 			Str("server", serv.Name()).
 			Type("msg-type", msg).
-			Msg("received message from server")
+			Msg("received message from server in execute")
 
 		switch v := msg.(type) {
 		case *pgproto3.CopyOutResponse:
@@ -1052,6 +1052,12 @@ func (s *QueryStateExecutorImpl) executeSliceGuts(qd *QueryDesc, topPlan plan.Pl
 		portalLoop:
 			for {
 				msg, err := s.Client().Peek()
+
+				spqrlog.Zero.Trace().
+					Str("server", serv.Name()).
+					Type("msg-type", msg).
+					Msg("peek in portalLoop")
+
 				if err != nil {
 					return err
 				}
@@ -1079,6 +1085,8 @@ func (s *QueryStateExecutorImpl) executeSliceGuts(qd *QueryDesc, topPlan plan.Pl
 					if err := serv.Send(msg); err != nil {
 						return err
 					}
+				case *pgproto3.Close, *pgproto3.Bind, *pgproto3.Describe, *pgproto3.Parse:
+					return nil
 				}
 
 			}

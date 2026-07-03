@@ -212,7 +212,7 @@ func randomHex(n int) (string, error) {
 %token <str> DISTRIBUTED IN ON
 %token <str> DEFAULT
 %token <str> STALE CLIENTS
-%token <str> OPTIONS
+%token <str> OPTIONS FORCE
 
 %token <str> IDENTITY MURMUR CITY 
 
@@ -302,6 +302,7 @@ func randomHex(n int) (string, error) {
 %type<str> opt_default_shard
 %type<options> options opt_options alter_generic_options generic_option_list alter_generic_option_list
 %type<option> generic_option_elem alter_generic_option_elem
+%type<bool> opt_force
 
 %type<statement> alter_sys_target
 
@@ -754,7 +755,7 @@ show_statement_type:
 			MoveTaskStr, MoveTasksStr, UniqueIndexesStr,
 			TaskGroupExtendedStr, TaskGroupsExtendedStr, RedistributeTasksStr,
 			ErrorStr, StartupFinishedStr, TwoPhaseTXStr, TwoPhaseTXStorageStr,
-			FileSettingsStr, TaskGroupWorkersStr, ShardsExtendedStr:
+			FileSettingsStr, TaskGroupWorkersStr, ShardsExtendedStr, MeanKRLockTimeStr:
 			$$ = v
 		default:
 			$$ = UnsupportedStr
@@ -1626,19 +1627,30 @@ key_range_define_stmt:
 	}
 
 shard_define_stmt:
-	SHARD any_id opt_options
+	SHARD any_id opt_options opt_force
 	{
-		$$ = &ShardDefinition{Id: $2, Options: $3}
+		$$ = &ShardDefinition{
+			Id: $2,
+			Options: $3,
+			Force: $4,
+		}
 	}
 	|
-	SHARD opt_options
+	SHARD opt_options opt_force
 	{
 		str, err := randomHex(6)
 		if err != nil {
 			panic(err)
 		}
-		$$ = &ShardDefinition{Id: "shard" + str, Options: $2}
+		$$ = &ShardDefinition{
+			Id: "shard" + str,
+			Options: $2,
+			Force: $3,
+		}
 	}
+
+opt_force:
+	FORCE { $$ = true } | {$$ = false}
 
 any_id_list:
 	any_val
