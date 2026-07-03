@@ -2,12 +2,12 @@ name: Run benchmarks
 
 on:
   pull_request:
-    types: [labeled, closed]
+    types: [opened, synchronize, reopened, labeled, closed]
 
   workflow_dispatch:
     inputs:
       cpu:
-        description: 'Number of CPU cores on router'     
+        description: 'Number of CPU cores on router'
         required: false
         default: 32
       memory:
@@ -24,10 +24,38 @@ on:
         default: 's3-c8-m32'
 
 jobs:
+  collect_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      benchmark: ${{ steps.filter.outputs.benchmark }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            benchmark:
+              - 'router/qrouter/**'
+              - 'router/relay/**'
+              - 'router/poolmgr/**'
+              - 'router/client/**'
+              - 'router/server/**'
+              - 'pkg/pool/**'
+              - '.github/actions/benchmarks/**'
+              - '.github/workflows/benchmark.yaml'
+
   build:
-    if: >
+    needs: collect_changes
+    # Run if:
+    # 1. Manual dispatch
+    # 2. Paths matched (opened/synchronize/reopened with changes in monitored dirs)
+    # 3. Performance label was added
+    if:  |
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && github.event.action != 'closed' && github.event.label.name == 'performance')
+      (github.event.action != 'closed' && ((github.event_name == 'pull_request' && github.event.action != 'closed' && github.event.label.name == 'performance') ||
+      needs.collect_changes.outputs.benchmark == 'true'))
 
     runs-on: ubuntu-latest
     env:
