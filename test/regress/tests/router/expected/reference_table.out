@@ -18,7 +18,7 @@ CREATE REFERENCE TABLE sh1.test_ref_rel_rel;
       create reference table      
 ----------------------------------
  table    -> sh1.test_ref_rel_rel
- shard id -> sh1,sh2,sh3,sh4
+ shard id -> sh1,sh2,sh3,sh411
 (2 rows)
 
 -- partial ref relation test
