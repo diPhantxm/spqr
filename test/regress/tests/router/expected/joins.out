@@ -6,7 +6,7 @@ CREATE DISTRIBUTION ds1 COLUMN TYPES integer;
 (1 row)
 
 CREATE KEY RANGE kridi4 from 2000 route to sh4 FOR DISTRIBUTION ds1;
- add key range 
+ add key range ss
 ---------------
  bound -> 2000
 (1 row)
